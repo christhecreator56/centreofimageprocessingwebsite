@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  
+  --color-background: #0a0a0a;
+  --color-surface: #121212;
+  --color-primary: #ffffff;
+  --color-muted: #888888;
+  --color-border: rgba(255, 255, 255, 0.1);
+
+  --transition-timing-function-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  --cursor-size: 12px;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  cursor: none;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom Scrollbar for the site */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Loading Scanner line */
+.scanner-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: #fff;
+  box-shadow: 0 0 20px #fff;
+  top: 0;
+  animation: scan 2s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+  opacity: 0.8;
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  50% { top: 100%; }
+  100% { top: 0; }
+}
+
+/* Custom keyframes for loader reveal */
+@keyframes revealUp {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-revealUp {
+  animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Marquee text animations */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+}
+.marquee-content {
+  display: flex;
+  animation: marquee 20s linear infinite;
+}
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Lenis smooth scrolling rules */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
