@@ -1,12 +1,25 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ *
+ * Theme tokens
+ *
+ * Every colour in the site resolves through one of these. The @theme
+ * block below defines the DARK palette (the default), and the
+ * html[data-theme="light"] block re-points the same tokens at the light
+ * palette. Because Tailwind v4 compiles `bg-surface`, `text-ink/40`,
+ * etc. down to `var(--color-*)` references, swapping one attribute on
+ * <html> re-themes the whole page with no per-component branching.
+ * ------------------------------------------------------------------ */
+
 @theme {
   --font-sans: "Inter", sans-serif;
-  
+
   --color-background: #0a0a0a;
   --color-surface: #121212;
+  --color-elevated: #1a1a1a;
+  --color-ink: #ffffff;
   --color-primary: #ffffff;
-  --color-muted: #888888;
+  --color-muted: #8a8a8a;
   --color-border: rgba(255, 255, 255, 0.1);
 
   --transition-timing-function-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -14,6 +27,59 @@
 
 :root {
   --cursor-size: 12px;
+
+  /* Non-utility values that still have to flip with the theme. */
+  --noise-opacity: 0.035;
+  --stroke-ink: rgba(255, 255, 255, 0.3);
+  --canvas-filter: none;
+  --canvas-opacity: 0.7;
+  --logo-filter: brightness(0) invert(1);
+  --scrollbar-track: #0a0a0a;
+  --scrollbar-thumb: #333333;
+  --scrollbar-thumb-hover: #555555;
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.8);
+  --shadow-tint: rgba(0, 0, 0, 0.65);
+
+  /* footer wash strengths — see CinematicFooter */
+  --footer-line-alpha: 5%;
+  --footer-ghost-alpha: 6%;
+  --footer-aurora-alpha: 6%;
+  --footer-pill-tint: 3%;
+  --glow: rgba(255, 255, 255, 0.2);
+  color-scheme: dark;
+}
+
+/* The light palette is warm-neutral rather than pure white: paper for
+   the page, true white for raised surfaces, so the section rhythm that
+   dark mode gets from #0a0a0a vs #121212 still reads. */
+html[data-theme="light"] {
+  --color-background: #f2f1ed;
+  --color-surface: #ffffff;
+  --color-elevated: #e8e6e0;
+  --color-ink: #101012;
+  --color-primary: #101012;
+  --color-muted: #63636b;
+  --color-border: rgba(16, 16, 18, 0.12);
+
+  --noise-opacity: 0.05;
+  --stroke-ink: rgba(16, 16, 18, 0.28);
+  /* The city canvas is drawn as a night skyline; inverting it turns the
+     same geometry into a pale daylight blueprint instead of a black slab. */
+  --canvas-filter: invert(1) hue-rotate(180deg) saturate(0.22) contrast(0.82) brightness(1.06);
+  --canvas-opacity: 0.3;
+  --logo-filter: brightness(0);
+  --scrollbar-track: #f2f1ed;
+  --scrollbar-thumb: #cdcbc4;
+  --scrollbar-thumb-hover: #b0aea6;
+  --shadow-card: 0 20px 50px rgba(16, 16, 18, 0.12);
+  --shadow-tint: rgba(16, 16, 18, 0.18);
+
+  --footer-line-alpha: 10%;
+  --footer-ghost-alpha: 14%;
+  --footer-aurora-alpha: 7%;
+  --footer-pill-tint: 5%;
+  --glow: rgba(16, 16, 18, 0.18);
+  color-scheme: light;
 }
 
 body {
@@ -21,6 +87,62 @@ body {
   color: var(--color-primary);
   cursor: none;
   overflow-x: hidden;
+}
+
+/* Theme swap: browsers with the View Transitions API get the circular
+   wipe set up in ThemeProvider; everyone else gets this cross-fade. */
+html.theme-fading,
+html.theme-fading * {
+  transition:
+    background-color 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    fill 420ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+
+/* The city canvas and the logo mark need per-theme treatment that no
+   utility class can express. */
+.themed-canvas {
+  filter: var(--canvas-filter);
+  opacity: var(--canvas-opacity);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.themed-logo {
+  filter: var(--logo-filter);
+}
+
+/* ------------------------------------------------------------------ *
+ * Scroll motion blur
+ *
+ * Applied per block rather than to the whole page: a filter on a
+ * multi-viewport-tall element forces the browser to rasterise the entire
+ * thing, whereas bounded blocks only cost what is on screen. The rule is
+ * scoped to html.is-blurring so there is no filter at all at rest.
+ * ------------------------------------------------------------------ */
+html.is-blurring .motion-blur {
+  filter: blur(var(--scroll-blur, 0px));
+  will-change: filter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.is-blurring .motion-blur {
+    filter: none;
+  }
+}
+
+/* The loader curtain is always dark, so its light leak is always additive. */
+.qr-bloom {
+  mix-blend-mode: screen;
 }
 
 /* Hide scrollbar */
@@ -37,13 +159,89 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: var(--scrollbar-thumb);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ------------------------------------------------------------------ *
+ * Entrance choreography — the loader hands the page off to the hero.
+ *
+ * The QR mask does the reveal; these rules do the depth. The stage sits
+ * pushed slightly toward the viewer while the curtain is up, then rides
+ * back to 1:1 as the mask holes open. Once we're live every transform is
+ * removed, otherwise `position: fixed` descendants stay trapped inside
+ * the transformed ancestor.
+ * ------------------------------------------------------------------ */
+
+.cis-stage {
+  transform-origin: 50% 42%;
+  will-change: transform;
+}
+
+.cis-stage[data-phase="loading"] {
+  transform: scale(1.14);
+}
+
+.cis-stage[data-phase="revealing"] {
+  transform: scale(1);
+  transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cis-stage[data-phase="live"] {
+  transform: none;
+  will-change: auto;
+}
+
+.cis-tint {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(10, 10, 10, 0.35) 0%,
+    rgba(10, 10, 10, 0.8) 65%,
+    #0a0a0a 100%
+  );
+}
+
+.cis-tint[data-phase="loading"] {
+  opacity: 0.7;
+}
+
+.cis-tint[data-phase="revealing"] {
+  opacity: 0;
+  transition: opacity 1.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Nav fades in only after the reveal lands. Opacity only — a transform
+   here would break the dock's fixed positioning. */
+.cis-nav {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cis-nav[data-phase="live"] {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0.1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cis-stage[data-phase="loading"],
+  .cis-stage[data-phase="revealing"] {
+    transform: none;
+    transition: none;
+  }
+  .cis-tint {
+    display: none;
+  }
 }
 
 /* Loading Scanner line */
@@ -51,8 +249,8 @@ body {
   position: absolute;
   width: 100%;
   height: 2px;
-  background: #fff;
-  box-shadow: 0 0 20px #fff;
+  background: var(--color-ink);
+  box-shadow: 0 0 20px var(--color-ink);
   top: 0;
   animation: scan 2s cubic-bezier(0.7, 0, 0.3, 1) infinite;
   opacity: 0.8;

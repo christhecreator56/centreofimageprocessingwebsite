@@ -19,18 +19,18 @@ const STYLES = `
   -webkit-font-smoothing: antialiased;
   
   /* Dynamic theme variables tailored for CIP's dark layout */
-  --pill-bg-1: rgba(255, 255, 255, 0.03);
-  --pill-bg-2: rgba(255, 255, 255, 0.01);
-  --pill-shadow: rgba(0, 0, 0, 0.5);
-  --pill-highlight: rgba(255, 255, 255, 0.08);
-  --pill-inset-shadow: rgba(0, 0, 0, 0.8);
-  --pill-border: rgba(255, 255, 255, 0.08);
+  --pill-bg-1: color-mix(in oklab, var(--color-ink) var(--footer-pill-tint), transparent);
+  --pill-bg-2: color-mix(in oklab, var(--color-ink) 1%, transparent);
+  --pill-shadow: var(--shadow-tint);
+  --pill-highlight: color-mix(in oklab, var(--color-ink) 8%, transparent);
+  --pill-inset-shadow: color-mix(in oklab, var(--color-background) 60%, transparent);
+  --pill-border: color-mix(in oklab, var(--color-ink) 14%, transparent);
   
-  --pill-bg-1-hover: rgba(255, 255, 255, 0.08);
-  --pill-bg-2-hover: rgba(255, 255, 255, 0.02);
-  --pill-border-hover: rgba(255, 255, 255, 0.2);
-  --pill-shadow-hover: rgba(0, 0, 0, 0.7);
-  --pill-highlight-hover: rgba(255, 255, 255, 0.2);
+  --pill-bg-1-hover: color-mix(in oklab, var(--color-ink) 10%, transparent);
+  --pill-bg-2-hover: color-mix(in oklab, var(--color-ink) 3%, transparent);
+  --pill-border-hover: color-mix(in oklab, var(--color-ink) 24%, transparent);
+  --pill-shadow-hover: var(--shadow-tint);
+  --pill-highlight-hover: color-mix(in oklab, var(--color-ink) 22%, transparent);
 }
 
 @keyframes footer-breathe {
@@ -65,8 +65,8 @@ const STYLES = `
 .footer-bg-grid {
   background-size: 60px 60px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in oklab, var(--color-ink) var(--footer-line-alpha), transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-ink) var(--footer-line-alpha), transparent) 1px, transparent 1px);
   mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
   -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
 }
@@ -75,8 +75,8 @@ const STYLES = `
 .footer-aurora {
   background: radial-gradient(
     circle at 50% 50%, 
-    rgba(255, 255, 255, 0.05) 0%, 
-    rgba(255, 255, 255, 0.02) 40%, 
+    color-mix(in oklab, var(--color-ink) var(--footer-aurora-alpha), transparent) 0%, 
+    color-mix(in oklab, var(--color-ink) calc(var(--footer-aurora-alpha) / 2), transparent) 40%, 
     transparent 70%
   );
 }
@@ -100,7 +100,7 @@ const STYLES = `
   box-shadow: 
       0 20px 40px -10px var(--pill-shadow-hover), 
       inset 0 1px 1px var(--pill-highlight-hover);
-  color: #ffffff;
+  color: var(--color-ink);
 }
 
 /* Giant Background Text Masking */
@@ -110,19 +110,19 @@ const STYLES = `
   font-weight: 900;
   letter-spacing: -0.05em;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.04);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+  -webkit-text-stroke: 1px color-mix(in oklab, var(--color-ink) var(--footer-ghost-alpha), transparent);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-ink) var(--footer-ghost-alpha), transparent) 0%, transparent 60%);
   -webkit-background-clip: text;
   background-clip: text;
 }
 
 /* Metallic Text Glow */
 .footer-text-glow {
-  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.4) 100%);
+  background: linear-gradient(180deg, var(--color-ink) 0%, color-mix(in oklab, var(--color-ink) 40%, transparent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0px 0px 20px rgba(255, 255, 255, 0.15));
+  filter: drop-shadow(0px 0px 20px color-mix(in oklab, var(--color-ink) 18%, transparent));
 }
 `;
 
@@ -203,11 +203,11 @@ MagneticButton.displayName = "MagneticButton";
 // -------------------------------------------------------------------------
 const MarqueeItem = () => (
   <div className="flex items-center space-x-12 px-6">
-    <span>Computer Vision</span> <span className="text-white/60">✦</span>
-    <span>Neural Rendering</span> <span className="text-white/60">✦</span>
-    <span>Semantic Segmentation</span> <span className="text-white/60">✦</span>
-    <span>Object Detection</span> <span className="text-white/60">✦</span>
-    <span>Spatial Mapping</span> <span className="text-white/60">✦</span>
+    <span>Computer Vision</span> <span className="text-ink/60">✦</span>
+    <span>Neural Rendering</span> <span className="text-ink/60">✦</span>
+    <span>Semantic Segmentation</span> <span className="text-ink/60">✦</span>
+    <span>Object Detection</span> <span className="text-ink/60">✦</span>
+    <span>Spatial Mapping</span> <span className="text-ink/60">✦</span>
   </div>
 );
 
@@ -284,7 +284,7 @@ export function CinematicFooter() {
         style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
       >
         {/* The actual footer stays fixed to the viewport underneath everything */}
-        <footer className="fixed bottom-0 left-0 flex h-screen w-full flex-col justify-between overflow-hidden bg-[#0a0a0a] text-white cinematic-footer-wrapper border-t border-white/5">
+        <footer className="fixed bottom-0 left-0 flex h-screen w-full flex-col justify-between overflow-hidden bg-background text-ink cinematic-footer-wrapper border-t border-ink/10">
           
           {/* Ambient Light & Grid Background */}
           <div className="footer-aurora absolute left-1/2 top-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[80px] pointer-events-none z-0" />
@@ -299,8 +299,8 @@ export function CinematicFooter() {
           </div>
 
           {/* 1. Diagonal Sleek Marquee (Top of footer) */}
-          <div className="absolute top-12 left-0 w-full overflow-hidden border-y border-white/10 bg-black/60 backdrop-blur-md py-4 z-10 -rotate-2 scale-110 shadow-2xl">
-            <div className="flex w-max animate-footer-scroll-marquee text-xs md:text-sm font-bold tracking-[0.3em] text-white/40 uppercase">
+          <div className="absolute top-12 left-0 w-full overflow-hidden border-y border-ink/10 bg-background/60 backdrop-blur-md py-4 z-10 -rotate-2 scale-110 shadow-2xl">
+            <div className="flex w-max animate-footer-scroll-marquee text-xs md:text-sm font-bold tracking-[0.3em] text-ink/40 uppercase">
               <MarqueeItem />
               <MarqueeItem />
             </div>
@@ -319,15 +319,15 @@ export function CinematicFooter() {
             <div ref={linksRef} className="flex flex-col items-center gap-6 w-full">
               {/* Primary links */}
               <div className="flex flex-wrap justify-center gap-4 w-full">
-                <MagneticButton as="a" href="https://github.com" target="_blank" className="footer-glass-pill px-10 py-5 rounded-full text-white font-bold text-sm md:text-base flex items-center gap-3 group">
-                  <svg className="w-6 h-6 text-white/60 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                <MagneticButton as="a" href="https://github.com" target="_blank" className="footer-glass-pill px-10 py-5 rounded-full text-ink font-bold text-sm md:text-base flex items-center gap-3 group">
+                  <svg className="w-6 h-6 text-ink/60 group-hover:text-ink transition-colors" fill="currentColor" viewBox="0 0 24 24">
                     <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.193 22 16.44 22 12.017 22 6.484 17.522 2 12 2z"/>
                   </svg>
                   Explore GitHub
                 </MagneticButton>
                 
-                <MagneticButton as="a" href="#projects" className="footer-glass-pill px-10 py-5 rounded-full text-white font-bold text-sm md:text-base flex items-center gap-3 group">
-                  <svg className="w-6 h-6 text-white/60 group-hover:text-white transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <MagneticButton as="a" href="#projects" className="footer-glass-pill px-10 py-5 rounded-full text-ink font-bold text-sm md:text-base flex items-center gap-3 group">
+                  <svg className="w-6 h-6 text-ink/60 group-hover:text-ink transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                   Read Publications
@@ -336,16 +336,16 @@ export function CinematicFooter() {
 
               {/* Secondary text links */}
               <div className="flex flex-wrap justify-center gap-3 md:gap-6 w-full mt-2">
-                <MagneticButton as="a" href="#philosophy" className="footer-glass-pill px-6 py-3 rounded-full text-white/60 font-medium text-xs md:text-sm hover:text-white">
+                <MagneticButton as="a" href="#philosophy" className="footer-glass-pill px-6 py-3 rounded-full text-ink/60 font-medium text-xs md:text-sm hover:text-ink">
                   Philosophy
                 </MagneticButton>
-                <MagneticButton as="a" href="#projects" className="footer-glass-pill px-6 py-3 rounded-full text-white/60 font-medium text-xs md:text-sm hover:text-white">
+                <MagneticButton as="a" href="#projects" className="footer-glass-pill px-6 py-3 rounded-full text-ink/60 font-medium text-xs md:text-sm hover:text-ink">
                   Applied Projects
                 </MagneticButton>
-                <MagneticButton as="a" href="#events" className="footer-glass-pill px-6 py-3 rounded-full text-white/60 font-medium text-xs md:text-sm hover:text-white">
+                <MagneticButton as="a" href="#events" className="footer-glass-pill px-6 py-3 rounded-full text-ink/60 font-medium text-xs md:text-sm hover:text-ink">
                   Calendar Events
                 </MagneticButton>
-                <MagneticButton as="a" href="#contact" className="footer-glass-pill px-6 py-3 rounded-full text-white/60 font-medium text-xs md:text-sm hover:text-white">
+                <MagneticButton as="a" href="#contact" className="footer-glass-pill px-6 py-3 rounded-full text-ink/60 font-medium text-xs md:text-sm hover:text-ink">
                   Contact Registry
                 </MagneticButton>
               </div>
@@ -356,23 +356,23 @@ export function CinematicFooter() {
           <div className="relative z-20 w-full pb-8 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
             
             {/* Copyright */}
-            <div className="text-white/40 text-[10px] md:text-xs font-semibold tracking-widest uppercase order-2 md:order-1">
+            <div className="text-ink/40 text-[10px] md:text-xs font-semibold tracking-widest uppercase order-2 md:order-1">
               © 2026 Centre of Image Processing. All rights reserved.
             </div>
 
             {/* "Made with Love" Badge */}
-            <div className="footer-glass-pill px-6 py-3 rounded-full flex items-center gap-2 order-1 md:order-2 cursor-default border-white/10">
-              <span className="text-white/40 text-[10px] md:text-xs font-bold uppercase tracking-widest">Crafted with</span>
+            <div className="footer-glass-pill px-6 py-3 rounded-full flex items-center gap-2 order-1 md:order-2 cursor-default border-ink/10">
+              <span className="text-ink/40 text-[10px] md:text-xs font-bold uppercase tracking-widest">Crafted with</span>
               <span className="animate-footer-heartbeat text-sm md:text-base text-red-500">❤</span>
-              <span className="text-white/40 text-[10px] md:text-xs font-bold uppercase tracking-widest">by</span>
-              <span className="text-white font-black text-xs md:text-sm tracking-normal ml-1">CIP</span>
+              <span className="text-ink/40 text-[10px] md:text-xs font-bold uppercase tracking-widest">by</span>
+              <span className="text-ink font-black text-xs md:text-sm tracking-normal ml-1">CIP</span>
             </div>
 
             {/* Back to top */}
             <MagneticButton
               as="button"
               onClick={scrollToTop}
-              className="w-12 h-12 rounded-full footer-glass-pill flex items-center justify-center text-white/60 hover:text-white group order-3"
+              className="w-12 h-12 rounded-full footer-glass-pill flex items-center justify-center text-ink/60 hover:text-ink group order-3"
             >
               <svg className="w-5 h-5 transform group-hover:-translate-y-1.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>

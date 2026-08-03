@@ -1,42 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { SmoothInput } from './SmoothInput';
-
-// Lazy load Firebase packages to prevent bundle Bloat or build errors if Firebase is unused/unconfigured
-let firebaseApp, db, auth, isFirebaseReady = false;
-
-const initFirebase = async () => {
-  if (typeof window === 'undefined') return;
-  const firebaseConfigStr = window.__firebase_config;
-
-  if (firebaseConfigStr) {
-    try {
-      const { initializeApp } = await import('firebase/app');
-      const { getFirestore } = await import('firebase/firestore');
-      const { getAuth, signInAnonymously, signInWithCustomToken } = await import('firebase/auth');
-
-      const firebaseConfig = JSON.parse(firebaseConfigStr);
-      firebaseApp = initializeApp(firebaseConfig);
-      db = getFirestore(firebaseApp);
-      auth = getAuth(firebaseApp);
-
-      try {
-        if (typeof window.__initial_auth_token !== 'undefined') {
-          await signInWithCustomToken(auth, window.__initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-        isFirebaseReady = true;
-      } catch (authErr) {
-        console.error("Firebase Auth Error:", authErr);
-      }
-    } catch (err) {
-      console.error("Firebase Init Error:", err);
-    }
-  } else {
-    console.warn("No Firebase configuration found. Database features will be simulated.");
-  }
-};
+import { Reveal, RevealGroup, RevealItem, RevealWords } from './Reveal';
+import { submitContact } from '../lib/api';
 
 export default function Contact() {
   const [name, setName] = useState('');
@@ -46,98 +12,66 @@ export default function Contact() {
   const [status, setStatus] = useState('idle'); // idle | submitting | success | error
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    initFirebase();
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('submitting');
     setErrorMessage('');
 
-    const appId = window.__app_id || 'cip-zypsy-clone';
-
-    if (!isFirebaseReady || !auth || !db) {
-      // Demo mode fallback
-      setTimeout(() => {
-        setStatus('success');
-      }, 1500);
-      return;
-    }
-
     try {
-      const { collection, addDoc } = await import('firebase/firestore');
-      const contactsRef = collection(db, 'artifacts', appId, 'public', 'data', 'contacts');
-      await addDoc(contactsRef, {
-        name,
-        email,
-        interest,
-        timestamp: new Date().toISOString(),
-        userId: auth.currentUser ? auth.currentUser.uid : 'anonymous'
-      });
-
+      await submitContact({ name, email, interest });
       setStatus('success');
     } catch (err) {
-      console.error("Submission error:", err);
-      setErrorMessage("Database connection error. Try again.");
+      console.error('Submission error:', err);
+      setErrorMessage('Could not reach the registry. Please try again.');
       setStatus('error');
     }
   };
 
-  const scrollReveal = {
-    hidden: { opacity: 0, y: 40, filter: "blur(12px)" },
-    visible: {
-      opacity: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: { duration: 1, ease: [0.16, 1, 0.3, 1] },
-    },
-  };
-
   return (
-    <section id="contact" className="py-32 md:py-48 px-6 md:px-12 bg-background relative text-white">
-      <div className="max-w-4xl mx-auto text-center">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={scrollReveal}
-        >
+    <section id="contact" className="relative bg-background px-6 pb-40 pt-24 text-ink md:px-12 md:pb-48 md:pt-48">
+      <div className="motion-blur max-w-4xl mx-auto text-center">
+        <Reveal y={24} blur={8}>
           <span className="text-xs uppercase tracking-widest text-muted block mb-6">Database Registry</span>
-          <h2 className="text-5xl md:text-7xl font-medium tracking-tighter mb-16">Join the Matrix.</h2>
-
+        </Reveal>
+        <RevealWords
+          as="h2"
+          text="Join the Matrix."
+          stagger={0.07}
+          className="block text-5xl md:text-7xl font-medium tracking-tighter mb-16"
+        />
+        <div>
           {status !== 'success' ? (
-            <form onSubmit={handleSubmit} className="text-left space-y-12 relative">
+            <RevealGroup as="form" onSubmit={handleSubmit} stagger={0.1} className="text-left space-y-12 relative">
               {status === 'error' && (
                 <div className="absolute -top-12 left-0 w-full text-center text-red-500 text-sm tracking-widest uppercase">
                   {errorMessage}
                 </div>
               )}
 
-              <SmoothInput
+              <RevealItem><SmoothInput
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Name"
-              />
+              /></RevealItem>
 
-              <SmoothInput
+              <RevealItem><SmoothInput
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
-              />
+              /></RevealItem>
 
-              <SmoothInput
+              <RevealItem><SmoothInput
                 type="text"
                 value={interest}
                 onChange={(e) => setInterest(e.target.value)}
                 placeholder="Area of Research (Optional)"
-              />
+              /></RevealItem>
 
-              <div className="flex justify-between items-center pt-8">
+              <RevealItem className="flex justify-between items-center pt-8">
                 <p className="text-xs text-muted max-w-xs">
                   By submitting, your data is processed and stored in our secure public registry.
                 </p>
@@ -149,31 +83,31 @@ export default function Contact() {
                   <span>
                     {status === 'submitting' ? 'Securing...' : 'Initialize'}
                   </span>
-                  <div className="w-12 h-12 rounded-full border border-white flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                  <div className="w-12 h-12 rounded-full border border-ink flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:bg-ink group-hover:text-background group-hover:translate-x-1 group-hover:scale-110">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
                   </div>
                 </button>
-              </div>
-            </form>
+              </RevealItem>
+            </RevealGroup>
           ) : (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="text-center py-20 border border-white/10 rounded-2xl bg-surface"
+              className="text-center py-20 border border-ink/10 rounded-2xl bg-surface"
             >
-              <div className="w-20 h-20 mx-auto bg-white rounded-full flex items-center justify-center text-black mb-6">
+              <div className="w-20 h-20 mx-auto bg-ink rounded-full flex items-center justify-center text-background mb-6">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
               </div>
-              <h3 className="text-3xl font-medium tracking-tighter mb-4 text-white">Data Secured</h3>
+              <h3 className="text-3xl font-medium tracking-tighter mb-4 text-ink">Data Secured</h3>
               <p className="text-muted">Your profile has been added to our active registry.</p>
             </motion.div>
           )}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

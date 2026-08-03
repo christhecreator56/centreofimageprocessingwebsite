@@ -194,7 +194,7 @@ export const SmoothInput = React.forwardRef(({
 
   return (
     <div className={cn(
-      "relative w-full border-b border-white/10 focus-within:border-white py-4 transition-colors duration-300",
+      "relative w-full border-b border-ink/10 focus-within:border-ink py-4 transition-colors duration-300",
       wrapperClassName
     )}>
       <div
@@ -212,7 +212,7 @@ export const SmoothInput = React.forwardRef(({
           type={type}
           placeholder={placeholder}
           className={cn(
-            "w-full bg-transparent outline-none placeholder:text-white/40 text-2xl text-white hoverable col-start-1 col-end-2 row-start-1 row-end-2",
+            "w-full bg-transparent outline-none placeholder:text-ink/40 text-2xl text-ink hoverable col-start-1 col-end-2 row-start-1 row-end-2",
             className,
           )}
           style={style}
@@ -238,7 +238,7 @@ export const SmoothInput = React.forwardRef(({
           className="pointer-events-none invisible absolute top-0 left-0 whitespace-pre"
         />
         <motion.div
-          className="bg-white pointer-events-none col-start-1 col-end-2 row-start-1 row-end-2 h-[0.9em] w-0.5 self-center"
+          className="bg-ink pointer-events-none col-start-1 col-end-2 row-start-1 row-end-2 h-[0.9em] w-0.5 self-center"
           style={{ x: springCaretX, opacity: caretOpacity }}
         />
       </div>

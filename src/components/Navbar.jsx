@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
 import { Dock } from './Dock';
-import logoImg from '../assets/logo.png';
+
+const HomeIcon = () => (
+  <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 10.5 12 3l9 7.5" />
+    <path d="M5 9.5V21h14V9.5" />
+  </svg>
+);
 
 const PhilosophyIcon = () => (
   <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -42,140 +47,23 @@ const ConnectIcon = () => (
   </svg>
 );
 
+/**
+ * Desktop navigation only. On phones this renders nothing — MobileNav owns
+ * that experience with a thumb-reachable bottom bar instead of a top drawer.
+ */
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-
   const dockItems = [
-    {
-      icon: (
-        <img src={logoImg} alt="Logo" className="h-[60%] w-auto max-w-[80%] object-contain select-none pointer-events-none invert brightness-200" />
-      ),
-      label: "Home",
-      href: "#",
-      separator: true
-    },
-    {
-      icon: <PhilosophyIcon />,
-      label: "Philosophy",
-      href: "#philosophy"
-    },
-    {
-      icon: <ProjectsIcon />,
-      label: "Projects",
-      href: "#projects"
-    },
-    {
-      icon: <EventsIcon />,
-      label: "Events",
-      href: "#events"
-    },
-    {
-      icon: <NewsletterIcon />,
-      label: "Newsletter",
-      href: "#newsletter"
-    },
-    {
-      icon: <ConnectIcon />,
-      label: "Connect",
-      href: "#contact"
-    }
+    { icon: <HomeIcon />, label: 'Home', href: '#', separator: true },
+    { icon: <PhilosophyIcon />, label: 'Philosophy', href: '#philosophy' },
+    { icon: <ProjectsIcon />, label: 'Projects', href: '#projects' },
+    { icon: <EventsIcon />, label: 'Events', href: '#events' },
+    { icon: <NewsletterIcon />, label: 'Newsletter', href: '#newsletter' },
+    { icon: <ConnectIcon />, label: 'Connect', href: '#contact' },
   ];
-
-  const mobileMenuItems = [
-    { label: "Philosophy", href: "#philosophy" },
-    { label: "Projects", href: "#projects" },
-    { label: "Events", href: "#events" },
-    { label: "Newsletter", href: "#newsletter" },
-    { label: "Connect", href: "#contact", primary: true }
-  ];
-
-  const menuVariants = {
-    closed: {
-      opacity: 0,
-      scale: 0.95,
-      y: -20,
-      transition: {
-        duration: 0.3,
-        ease: [0.16, 1, 0.3, 1]
-      }
-    },
-    open: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        duration: 0.4,
-        ease: [0.16, 1, 0.3, 1]
-      }
-    }
-  };
 
   return (
-    <>
-      {/* Desktop View: Premium Hover Dock Menu */}
-      <div className="hidden md:block fixed top-6 left-1/2 -translate-x-1/2 z-50 w-auto">
-        <Dock items={dockItems} magnification={1.6} distance={100} iconSize={44} gap={8} />
-      </div>
-
-      {/* Mobile View: Floating Header Menu Drawer */}
-      <div className="md:hidden fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] flex flex-col items-center">
-        <div className="w-full bg-[#121212]/80 backdrop-blur-md border border-white/10 rounded-full px-5 py-3 flex items-center justify-between shadow-2xl">
-          <a href="#" className="flex items-center hoverable" onClick={() => setIsOpen(false)}>
-            <img src={logoImg} alt="Logo" className="h-8 w-auto select-none pointer-events-none invert brightness-200" />
-          </a>
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-8 h-8 flex items-center justify-center focus:outline-none hoverable"
-            aria-label="Toggle Menu"
-          >
-            <div className="relative w-6 h-[15px]">
-              <motion.span
-                animate={{ rotate: isOpen ? 45 : 0, y: isOpen ? 6.5 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="absolute top-0 left-0 w-6 h-0.5 bg-white rounded-full origin-center"
-              />
-              <motion.span
-                animate={{ opacity: isOpen ? 0 : 1 }}
-                transition={{ duration: 0.2 }}
-                className="absolute top-[6.5px] left-0 w-6 h-0.5 bg-white rounded-full"
-              />
-              <motion.span
-                animate={{ rotate: isOpen ? -45 : 0, y: isOpen ? -6.5 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="absolute bottom-0 left-0 w-6 h-0.5 bg-white rounded-full origin-center"
-              />
-            </div>
-          </button>
-        </div>
-
-        {/* Dropdown navigation overlay */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial="closed"
-              animate="open"
-              exit="closed"
-              variants={menuVariants}
-              className="w-full mt-2 bg-[#121212]/95 backdrop-blur-lg border border-white/10 rounded-[1.5rem] p-6 shadow-2xl flex flex-col gap-4"
-            >
-              {mobileMenuItems.map((item, idx) => (
-                <a
-                  key={idx}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`text-center py-3 rounded-full text-xs font-semibold tracking-widest uppercase transition-all hoverable ${
-                    item.primary
-                      ? "bg-white text-black hover:bg-gray-200 mt-2"
-                      : "text-muted hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </>
+    <div className="fixed top-6 left-1/2 z-50 hidden w-auto -translate-x-1/2 md:block">
+      <Dock items={dockItems} magnification={1.6} distance={100} iconSize={44} gap={8} />
+    </div>
   );
 }

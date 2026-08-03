@@ -17,7 +17,7 @@ const DEFAULT_SPRING = {
 function DockSeparator() {
   return (
     <div className="mx-1 flex items-center self-stretch select-none pointer-events-none">
-      <div className="h-6 w-px bg-white/10" />
+      <div className="h-6 w-px bg-ink/10" />
     </div>
   );
 }
@@ -80,9 +80,9 @@ function DockIcon({
           style={{ borderRadius }}
           className={cn(
             "flex h-full w-full items-center justify-center hoverable",
-            "text-white/60 transition-colors duration-150",
-            "hover:bg-white/[0.06] hover:text-white",
-            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
+            "text-ink/60 transition-colors duration-150",
+            "hover:bg-ink/[0.06] hover:text-ink",
+            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink/20",
             "[&_svg]:size-[55%]"
           )}
         >
@@ -91,7 +91,7 @@ function DockIcon({
       </motion.div>
 
       {alwaysShowLabels && (
-        <span className="mt-0.5 text-[10px] font-medium tracking-tight text-white/40 whitespace-nowrap pointer-events-none select-none leading-none">
+        <span className="mt-0.5 text-[10px] font-medium tracking-tight text-ink/40 whitespace-nowrap pointer-events-none select-none leading-none">
           {item.label}
         </span>
       )}
@@ -156,7 +156,7 @@ export function Dock({
     <motion.div
       ref={dockRef}
       className={cn(
-        "relative flex items-end overflow-visible border border-white/10 bg-[#121212]/60 px-3 py-3 shadow-2xl backdrop-blur-md -webkit-backdrop-blur-md select-none",
+        "relative flex items-end overflow-visible border border-ink/10 bg-surface/60 px-3 py-3 shadow-2xl backdrop-blur-md -webkit-backdrop-blur-md select-none",
         className
       )}
       style={{ gap, borderRadius }}
@@ -198,14 +198,14 @@ export function Dock({
               exit={{ opacity: 0, y: 6, scale: 0.94 }}
               transition={{ duration: 0.13, ease: "easeOut" }}
             >
-              <span className="rounded-md border border-white/10 bg-[#121212] px-2 py-1 text-xs font-medium text-white shadow-lg whitespace-nowrap">
+              <span className="rounded-md border border-ink/10 bg-surface px-2 py-1 text-xs font-medium text-ink shadow-lg whitespace-nowrap">
                 {items[hoveredIndex].label}
               </span>
               <svg
                 width="8"
                 height="4"
                 viewBox="0 0 8 4"
-                className="-mt-px text-[#121212] fill-current"
+                className="-mt-px text-surface fill-current"
                 aria-hidden
               >
                 <path d="M0 0L4 4L8 0" />

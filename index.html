@@ -4,12 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Centre of Image Processing | Vision Lab</title>
-    
+
+    <!-- Resolve the theme before first paint, otherwise the page flashes the
+         wrong palette for a frame while React boots. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('cip-theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          document.documentElement.dataset.theme = theme;
+          // the preloader curtain is dark in both themes
+          document.documentElement.style.backgroundColor = '#0a0a0a';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#0a0a0a] text-white">
+  <body class="bg-background text-ink">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
