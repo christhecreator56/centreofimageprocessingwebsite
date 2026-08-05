@@ -195,16 +195,14 @@ export default function Projects() {
     window.addEventListener('resize', onScroll);
     update();
 
-    // Keep ticking for a few frames after scrolling stops so the blur eases
-    // out instead of snapping off with the last scroll event.
-    let settle = requestAnimationFrame(function settleTick() {
-      if (scrollBlur.value > 0.05) update();
-      settle = requestAnimationFrame(settleTick);
-    });
+    // The blur eases out over several frames after the last scroll event, so
+    // the cards have to repaint during the decay. Subscribing to the shared
+    // ticker does that without adding a second permanent rAF loop.
+    const unsubscribe = scrollBlur.subscribe(onScroll);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
-      cancelAnimationFrame(settle);
+      unsubscribe();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };

@@ -494,7 +494,31 @@ export default function CityCanvas() {
       else paintFused(c, time);
     }
 
+    // This is a slow ambient drift, not gameplay. Redrawing three
+    // full-viewport canvases 60 times a second is invisible next to 30, and
+    // it halves both the canvas cost and the cost of every backdrop-filter
+    // sitting over it — each canvas frame invalidates their backdrop.
+    const MIN_FRAME_MS = 1000 / 30;
+    let lastPaint = 0;
+
+    // While the page is actually moving, hold the last frame. The skyline is a
+    // slow drift — during a scroll it is sliding up the screen and (on desktop)
+    // motion-blurred, so nobody can see it animate. Standing down here hands
+    // the whole canvas budget back to the compositor at the exact moment it is
+    // needed for scrolling, which is where the lag was most obvious.
+    let scrollingUntil = 0;
+    const onScroll = () => {
+      scrollingUntil = performance.now() + 140;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
     function frame(now) {
+      if (now - lastPaint < MIN_FRAME_MS || now < scrollingUntil) {
+        animationFrameId = requestAnimationFrame(frame);
+        return;
+      }
+      lastPaint = now;
+
       const time = (now / 1000);
       const T = (time / LOOP) % 1;
       
@@ -529,7 +553,9 @@ export default function CityCanvas() {
         ctx.drawImage(buf, 0, 0);
       } else {
         ctx.drawImage(buf, 0, 0);
-        const steps = 10;
+        // Six passes read the same as ten once the alpha ramp is this shallow,
+        // and each one is a full-screen composite.
+        const steps = 6;
         for (let s = 1; s <= steps; s++) {
           const sc = 1 + seam * 0.16 * (s / steps);
           ctx.globalAlpha = 0.16 * (1 - s / steps);
@@ -545,7 +571,16 @@ export default function CityCanvas() {
     }
 
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Capped at 1.5 rather than 2: this is a soft, out-of-focus skyline, so
+      // the extra pixels of a retina buffer cost a lot of fill rate and buy
+      // almost nothing. Three canvases at 2x on a 1440x900 display is 15.5M
+      // pixels a frame.
+      // Phones report 3x device pixel ratios and have far less fill rate to
+      // spend, so they get 1:1. Desktop caps at 1.5 rather than 2: this is a
+      // soft, out-of-focus skyline, and three canvases at 2x on a 1440x900
+      // display is 15.5M pixels a frame.
+      const coarse = window.matchMedia('(pointer: coarse)').matches;
+      const dpr = coarse ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
       const width = window.innerWidth || 800;
       const height = window.innerHeight || 600;
       W = Math.floor(width * dpr);
@@ -562,13 +597,38 @@ export default function CityCanvas() {
     window.addEventListener('resize', resize);
     makeNoise();
     resize();
-    animationFrameId = requestAnimationFrame(frame);
+
+    // Only animate while the canvas is actually on screen. The hero is one
+    // viewport of a page many viewports long, so without this the skyline
+    // keeps redrawing the whole time you are reading the footer.
+    let running = false;
+    const start = () => {
+      if (running) return;
+      running = true;
+      animationFrameId = requestAnimationFrame(frame);
+    };
+    const halt = () => {
+      running = false;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : halt()),
+      { rootMargin: '10% 0px' }
+    );
+    io.observe(cv);
+
+    // Tab-switching should park it too.
+    const onVisibility = () => (document.hidden ? halt() : start());
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('resize', resize);
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
+      window.removeEventListener('scroll', onScroll);
+      halt();
     };
   }, []);
 

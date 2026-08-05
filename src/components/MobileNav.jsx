@@ -124,7 +124,7 @@ export default function MobileNav() {
       transition={{ duration: 0.55, ease: EASE }}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex items-center gap-1 rounded-[1.4rem] border border-ink/10 bg-surface/85 p-1.5 shadow-[0_12px_40px_var(--shadow-tint)] backdrop-blur-xl">
+      <div className="flex items-center gap-1 rounded-[1.4rem] border border-ink/10 bg-surface/85 p-1.5 shadow-[0_12px_40px_var(--shadow-tint)] backdrop-blur-md">
         {ITEMS.map((item) => {
           const on = active === item.id;
           return (

@@ -131,7 +131,6 @@ html.theme-fading * {
  * ------------------------------------------------------------------ */
 html.is-blurring .motion-blur {
   filter: blur(var(--scroll-blur, 0px));
-  will-change: filter;
 }
 
 @media (prefers-reduced-motion: reduce) {

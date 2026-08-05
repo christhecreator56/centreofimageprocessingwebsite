@@ -26,23 +26,35 @@ export default function CustomCursor() {
     const onMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
+      wake();
     };
 
     window.addEventListener('mousemove', onMouseMove);
 
     const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 
-    let rafId;
+    // The cursor eases toward the pointer, so it only needs to animate while
+    // there is still a gap to close. Left running unconditionally this is a
+    // permanent per-frame wake-up for a dot that is not moving.
+    let rafId = 0;
     const renderCursor = () => {
       cursorX = lerp(cursorX, mouseX, 0.15);
       cursorY = lerp(cursorY, mouseY, 0.15);
       if (cursorRef.current) {
         cursorRef.current.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%)`;
       }
+      if (Math.abs(mouseX - cursorX) < 0.1 && Math.abs(mouseY - cursorY) < 0.1) {
+        rafId = 0;
+        return;
+      }
       rafId = requestAnimationFrame(renderCursor);
     };
 
-    rafId = requestAnimationFrame(renderCursor);
+    function wake() {
+      if (!rafId) rafId = requestAnimationFrame(renderCursor);
+    }
+
+    wake();
 
     // Track active class triggers globally
     const handleMouseOver = (e) => {
@@ -62,7 +74,7 @@ export default function CustomCursor() {
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseover', handleMouseOver);
-      cancelAnimationFrame(rafId);
+      if (rafId) cancelAnimationFrame(rafId);
       document.body.style.cursor = 'auto';
     };
   }, []);

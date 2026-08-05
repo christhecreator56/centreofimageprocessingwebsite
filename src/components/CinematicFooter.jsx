@@ -34,8 +34,8 @@ const STYLES = `
 }
 
 @keyframes footer-breathe {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  0% { opacity: 0.55; }
+  100% { opacity: 1; }
 }
 
 @keyframes footer-scroll-marquee {
@@ -69,6 +69,14 @@ const STYLES = `
     linear-gradient(to bottom, color-mix(in oklab, var(--color-ink) var(--footer-line-alpha), transparent) 1px, transparent 1px);
   mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
   -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+}
+
+/* While the curtain has not started to lift, the fixed footer is a full
+   screen of gradient, grid, 26vw type and a running marquee sitting behind
+   the page — composited every frame for something nobody can see. This skips
+   rendering its subtree entirely until it is close to being revealed. */
+.cinematic-footer-wrapper[data-idle='true'] {
+  content-visibility: hidden;
 }
 
 /* Theme-adaptive Aurora Glow */
@@ -216,6 +224,7 @@ const MarqueeItem = () => (
 // -------------------------------------------------------------------------
 export function CinematicFooter() {
   const wrapperRef = useRef(null);
+  const footerRef = useRef(null);
   const giantTextRef = useRef(null);
   const headingRef = useRef(null);
   const linksRef = useRef(null);
@@ -265,6 +274,24 @@ export function CinematicFooter() {
     return () => ctx.revert();
   }, []);
 
+  // Toggle the parked state from how close the curtain wrapper is to view.
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    const footer = footerRef.current;
+    if (!wrapper || !footer) return;
+
+    footer.dataset.idle = 'true';
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        footer.dataset.idle = entry.isIntersecting ? 'false' : 'true';
+      },
+      // A viewport of lead time, so it is fully painted before it is seen.
+      { rootMargin: '100% 0px' }
+    );
+    io.observe(wrapper);
+    return () => io.disconnect();
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -284,10 +311,14 @@ export function CinematicFooter() {
         style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
       >
         {/* The actual footer stays fixed to the viewport underneath everything */}
-        <footer className="fixed bottom-0 left-0 flex h-screen w-full flex-col justify-between overflow-hidden bg-background text-ink cinematic-footer-wrapper border-t border-ink/10">
+        <footer
+          ref={footerRef}
+          data-idle="true"
+          className="cinematic-footer-wrapper fixed bottom-0 left-0 flex h-screen w-full flex-col justify-between overflow-hidden border-t border-ink/10 bg-background text-ink"
+        >
           
           {/* Ambient Light & Grid Background */}
-          <div className="footer-aurora absolute left-1/2 top-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[80px] pointer-events-none z-0" />
+          <div className="footer-aurora pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%]" />
           <div className="footer-bg-grid absolute inset-0 z-0 pointer-events-none" />
 
           {/* Giant background text */}

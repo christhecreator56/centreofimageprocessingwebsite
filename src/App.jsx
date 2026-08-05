@@ -37,16 +37,31 @@ export default function App() {
     window.scrollTo(0, 0);
 
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      direction: 'vertical',
-      gestureDirection: 'vertical',
-      smooth: true,
-      mouseMultiplier: 1,
-      smoothTouch: false,
-      touchMultiplier: 2,
+      // NOTE: this config was written against Lenis v0 option names
+      // (`direction`, `gestureDirection`, `smooth`, `smoothTouch`,
+      // `mouseMultiplier`). v1.3 ignores all of them silently, so the scroll
+      // was running on defaults — including a 1.2s eased glide that reads as
+      // laggy because every wheel tick takes over a second to settle.
+      //
+      // `lerp` instead of `duration` is the frame-rate-independent mode: the
+      // view chases the target by a fixed fraction each frame, so input feels
+      // immediate while still smoothing. 0.12 is responsive without going
+      // choppy.
+      lerp: 0.12,
+      smoothWheel: true,
+      // Touch keeps the platform's own momentum. Intercepting it costs frames
+      // on exactly the devices that have the fewest to spare, and native
+      // momentum is better tuned than anything we would fake.
+      syncTouch: false,
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      wheelMultiplier: 1,
+      touchMultiplier: 1.5,
       infinite: false,
+      // We drive it from the GSAP ticker below, so it must not start its own.
+      autoRaf: false,
     });
+
     lenisRef.current = lenis;
     lenis.stop();
 
@@ -54,15 +69,15 @@ export default function App() {
     // or every scrubbed timeline (the footer curtain especially) runs stale.
     lenis.on('scroll', ScrollTrigger.update);
 
-    let frame;
-    const raf = (time) => {
-      lenis.raf(time);
-      frame = requestAnimationFrame(raf);
-    };
-    frame = requestAnimationFrame(raf);
+    // Drive Lenis from GSAP's ticker rather than its own requestAnimationFrame.
+    // Two independent loops meant two wake-ups per frame and no guarantee that
+    // scroll position was updated before the scrubbed timelines read it.
+    const tick = (time) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
-      cancelAnimationFrame(frame);
+      gsap.ticker.remove(tick);
       lenis.off('scroll', ScrollTrigger.update);
       lenis.destroy();
       lenisRef.current = null;
@@ -88,14 +103,15 @@ export default function App() {
   /**
    * Scroll motion blur.
    *
-   * Velocity is sampled per frame from the real scroll position rather than
-   * from Lenis internals, so it stays correct for wheel, keyboard and
-   * scrollbar dragging alike. The blur rises quickly and falls off slowly,
-   * which is what makes it read as smear rather than as a flicker.
+   * Velocity is sampled per frame from the real scroll position, so it stays
+   * correct for wheel, keyboard and scrollbar dragging alike. The blur rises
+   * quickly and falls off slowly, which is what makes it read as smear rather
+   * than as a flicker.
    *
-   * It only engages above a threshold, and the `.is-blurring` class is
-   * removed entirely at rest — a permanently-applied `blur(0px)` would keep
-   * every section on its own render surface for no visual gain.
+   * The loop is started by a scroll event and shuts itself down once the blur
+   * has decayed to zero and nothing has moved for a moment. A permanently
+   * running rAF is the thing that makes an idle page feel heavy, and this one
+   * had no reason to tick while nobody was scrolling.
    */
   useEffect(() => {
     if (phase !== 'live') return;
@@ -106,13 +122,26 @@ export default function App() {
     const coarse = window.matchMedia('(pointer: coarse)').matches;
     if (reduced || coarse) return;
 
-    const MAX = 5; // px
+    const MAX = 3.5; // px — above this the smear turns into mush
     const THRESHOLD = 6; // px/frame before any blur appears
     const GAIN = 0.1;
 
     let last = window.scrollY;
     let blur = 0;
-    let frame = requestAnimationFrame(function tick() {
+    let frame = 0;
+    let idleFrames = 0;
+
+    const stop = () => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      blur = 0;
+      idleFrames = 0;
+      scrollBlur.set(0);
+      root.classList.remove('is-blurring');
+      root.style.removeProperty('--scroll-blur');
+    };
+
+    const tick = () => {
       const y = window.scrollY;
       const velocity = Math.abs(y - last);
       last = y;
@@ -121,18 +150,31 @@ export default function App() {
       blur += (target - blur) * (target > blur ? 0.5 : 0.14);
       if (blur < 0.05) blur = 0;
 
-      scrollBlur.value = blur;
+      scrollBlur.set(blur);
       root.style.setProperty('--scroll-blur', `${blur.toFixed(2)}px`);
       root.classList.toggle('is-blurring', blur > 0);
 
+      // Two idle frames with no blur left and no movement: park the loop.
+      idleFrames = blur === 0 && velocity === 0 ? idleFrames + 1 : 0;
+      if (idleFrames > 2) {
+        stop();
+        return;
+      }
       frame = requestAnimationFrame(tick);
-    });
+    };
 
+    const wake = () => {
+      idleFrames = 0;
+      if (!frame) {
+        last = window.scrollY;
+        frame = requestAnimationFrame(tick);
+      }
+    };
+
+    window.addEventListener('scroll', wake, { passive: true });
     return () => {
-      cancelAnimationFrame(frame);
-      scrollBlur.value = 0;
-      root.classList.remove('is-blurring');
-      root.style.removeProperty('--scroll-blur');
+      window.removeEventListener('scroll', wake);
+      stop();
     };
   }, [phase]);
 

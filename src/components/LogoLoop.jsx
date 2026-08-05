@@ -125,14 +125,39 @@ const useAnimationLoop = (
       rafRef.current = requestAnimationFrame(animate);
     };
 
-    rafRef.current = requestAnimationFrame(animate);
-
-    return () => {
+    // Only run while the strip is on screen. This is one band in the middle
+    // of a page many viewports tall, and left unguarded it drives a transform
+    // every single frame for the entire session — including while the visitor
+    // is reading the footer, or has the tab in the background.
+    const start = () => {
+      if (rafRef.current === null) {
+        lastTimestampRef.current = null;
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+    const halt = () => {
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
       lastTimestampRef.current = null;
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting && !document.hidden ? start() : halt()),
+      { rootMargin: '15% 0px' }
+    );
+    io.observe(track);
+
+    const onVisibility = () => {
+      if (document.hidden) halt();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
+      halt();
     };
   }, [targetVelocity, seqWidth, seqHeight, isHovered, hoverSpeed, isVertical]);
 };
